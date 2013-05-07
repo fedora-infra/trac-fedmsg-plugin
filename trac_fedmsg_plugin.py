@@ -5,13 +5,9 @@ import socket
 import fedmsg
 
 # If fedmsg was already initialized, let's not re-do that.
-if getattr(getattr(fedmsg, '__local', None), '__context', None):
-    print "Not reinitializing fedmsg."
-else:
-    # Initialize fedmsg resources.
+if not getattr(getattr(fedmsg, '__local', None), '__context', None):
     hostname = socket.gethostname().split('.', 1)[0]
     fedmsg.init(name="trac." + hostname)
-    print "initializing"
 
 
 class FedmsgPlugin(trac.core.Component):
@@ -34,7 +30,6 @@ class FedmsgPlugin(trac.core.Component):
         )
 
     def publish(self, topic, **msg):
-        print "PUYBLISHING"
         msg['instance'] = self.env2dict()
         fedmsg.publish(modname='trac', topic=topic, msg=msg)
 
