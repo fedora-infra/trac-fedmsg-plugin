@@ -2,7 +2,6 @@ import trac.core
 
 import trac.ticket.api
 import trac.wiki.api
-import trac.versioncontrol.api
 
 import socket
 import fedmsg
@@ -38,7 +37,6 @@ class FedmsgPlugin(trac.core.Component):
     trac.core.implements(
         trac.ticket.api.ITicketChangeListener,
         trac.wiki.api.IWikiChangeListener,
-        trac.versioncontrol.api.IRepositoryChangeListener,
     )
 
     def publish(self, topic, **msg):
@@ -99,26 +97,4 @@ class FedmsgPlugin(trac.core.Component):
             topic='wiki.page.rename',
             page=wikipage2dict(page),
             old_name=old_name
-        )
-
-    def changeset_added(self, repos, changeset):
-        """Called after a changeset has been added to a repository."""
-        self.publish(
-            topic='changeset.new',
-            repos=[repo.name for repo in repos],
-            changeset=changeset.get_properties(),
-        )
-
-    def changeset_modified(self, repos, changeset, old_changeset):
-        """Called after a changeset has been modified in a repository.
-
-        The `old_changeset` argument contains the metadata of the changeset
-        prior to the modification. It is `None` if the old metadata cannot
-        be retrieved.
-        """
-        self.publish(
-            topic='changeset.update',
-            repos=[repo.name for repo in repos],
-            changeset=changeset.get_properties(),
-            old_changeset=old_changeset.get_properties(),
         )
