@@ -25,7 +25,7 @@ def env2dict(env):
 
 
 def wikipage2dict(page):
-    attrs = ['version', 'time', 'author', 'text', 'comment', 'readonly']
+    attrs = ['name', 'version', 'time', 'author', 'text', 'comment']
     return dict([(attr, getattr(page, attr)) for attr in attrs])
 
 
