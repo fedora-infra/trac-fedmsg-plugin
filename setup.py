@@ -11,7 +11,7 @@ setup(
     author="Ralph Bean",
     author_email="rbean@redhat.com",
     license='MIT',
-    url='http://github.com/fedora-infra/trac-fedmsg-plug',
+    url='http://github.com/fedora-infra/trac-fedmsg-plugin',
     py_modules=['trac_fedmsg_plugin'],
     entry_points={
         'trac.plugins': [
