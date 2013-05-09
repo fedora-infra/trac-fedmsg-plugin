@@ -3,6 +3,7 @@ import trac.core
 import trac.ticket.api
 import trac.wiki.api
 
+import inspect
 import socket
 import fedmsg
 
@@ -34,6 +35,31 @@ def ticket2dict(ticket):
     return d
 
 
+def currently_logged_in_user():
+    """ Return the currently logged in user.
+
+    This is insane.
+
+    Unless your method or function is passed a reference to the trac
+    'request' object, there is no way to get ahold of the currently
+    logged in user.  Furthermore, there is no way globally to get ahold
+    of the current request object.
+
+    Here, we crawl our way back up the call stack until we find the
+    first place that has 'req' as a local instance variable and attempt
+    to extract the username of the current user from that.
+
+    Please forgive me.
+    """
+
+    for frame in (f[0] for f in inspect.stack()):
+        if 'req' in frame.f_locals:
+            return frame.f_locals['req'].authname
+
+    # Practically speaking, we should never get here.
+    raise KeyError('No request object found.')
+
+
 class FedmsgPlugin(trac.core.Component):
     """ The trac fedmsg plugin.
 
@@ -48,6 +74,7 @@ class FedmsgPlugin(trac.core.Component):
     def publish(self, topic, **msg):
         """ Inner workhorse method.  Publish arguments to fedmsg. """
         msg['instance'] = env2dict(self.env)
+        msg['agent'] = currently_logged_in_user()
         fedmsg.publish(modname='trac', topic=topic, msg=msg)
 
     def ticket_created(self, ticket):
