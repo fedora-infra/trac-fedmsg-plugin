@@ -28,6 +28,12 @@ def wikipage2dict(page):
     return dict([(attr, getattr(page, attr)) for attr in attrs])
 
 
+def ticket2dict(ticket):
+    d = dict(id=ticket.id)
+    d.update(ticket.values)
+    return d
+
+
 class FedmsgPlugin(trac.core.Component):
     """ The trac fedmsg plugin.
 
@@ -46,7 +52,7 @@ class FedmsgPlugin(trac.core.Component):
 
     def ticket_created(self, ticket):
         """Called when a ticket is created."""
-        self.publish(topic='ticket.new', ticket=ticket.values)
+        self.publish(topic='ticket.new', ticket=ticket2dict(ticket))
 
     def ticket_changed(self, ticket, comment, author, old_values):
         """Called when a ticket is modified.
@@ -56,7 +62,7 @@ class FedmsgPlugin(trac.core.Component):
         """
         self.publish(
             topic='ticket.update',
-            ticket=ticket.values,
+            ticket=ticket2dict(ticket),
             comment=comment,
             author=author,
             old_values=old_values,
@@ -64,7 +70,7 @@ class FedmsgPlugin(trac.core.Component):
 
     def ticket_deleted(self, ticket):
         """Called when a ticket is deleted."""
-        self.publish(topic='ticket.delete', ticket=ticket.values)
+        self.publish(topic='ticket.delete', ticket=ticket2dict(ticket))
 
     def wiki_page_added(self, page):
         """Called whenever a new Wiki page is added."""
