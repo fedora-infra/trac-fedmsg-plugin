@@ -2,15 +2,10 @@ import trac.core
 
 import trac.ticket.api
 import trac.wiki.api
-import trac.versioncontrol.api
 
+import inspect
 import socket
 import fedmsg
-
-# If fedmsg was already initialized, let's not re-do that.
-if not getattr(getattr(fedmsg, '__local', None), '__context', None):
-    hostname = socket.gethostname().split('.', 1)[0]
-    fedmsg.init(name="trac." + hostname)
 
 
 def env2dict(env):
@@ -25,8 +20,39 @@ def env2dict(env):
 
 
 def wikipage2dict(page):
-    attrs = ['version', 'time', 'author', 'text', 'comment', 'readonly']
+    attrs = ['name', 'version', 'time', 'author', 'text', 'comment']
     return dict([(attr, getattr(page, attr)) for attr in attrs])
+
+
+def ticket2dict(ticket):
+    d = dict(id=ticket.id)
+    d.update(ticket.values)
+    return d
+
+
+def currently_logged_in_user():
+    """ Return the currently logged in user.
+
+    This is insane.
+
+    Unless your method or function is passed a reference to the trac
+    'request' object, there is no way to get ahold of the currently
+    logged in user.  Furthermore, there is no way globally to get ahold
+    of the current request object.
+
+    Here, we crawl our way back up the call stack until we find the
+    first place that has 'req' as a local instance variable and attempt
+    to extract the username of the current user from that.
+
+    Please forgive me.
+    """
+
+    for frame in (f[0] for f in inspect.stack()):
+        if 'req' in frame.f_locals:
+            return frame.f_locals['req'].authname
+
+    # Practically speaking, we should never get here.
+    raise KeyError('No request object found.')
 
 
 class FedmsgPlugin(trac.core.Component):
@@ -38,17 +64,25 @@ class FedmsgPlugin(trac.core.Component):
     trac.core.implements(
         trac.ticket.api.ITicketChangeListener,
         trac.wiki.api.IWikiChangeListener,
-        trac.versioncontrol.api.IRepositoryChangeListener,
     )
+
+    def __init__(self, *args, **kwargs):
+        super(FedmsgPlugin, self).__init__(*args, **kwargs)
+
+        # If fedmsg was already initialized, let's not re-do that.
+        if not getattr(getattr(fedmsg, '__local', None), '__context', None):
+            hostname = socket.gethostname().split('.', 1)[0]
+            fedmsg.init(name="trac." + hostname)
 
     def publish(self, topic, **msg):
         """ Inner workhorse method.  Publish arguments to fedmsg. """
         msg['instance'] = env2dict(self.env)
+        msg['agent'] = currently_logged_in_user()
         fedmsg.publish(modname='trac', topic=topic, msg=msg)
 
     def ticket_created(self, ticket):
         """Called when a ticket is created."""
-        self.publish(topic='ticket.new', ticket=ticket.values)
+        self.publish(topic='ticket.new', ticket=ticket2dict(ticket))
 
     def ticket_changed(self, ticket, comment, author, old_values):
         """Called when a ticket is modified.
@@ -58,7 +92,7 @@ class FedmsgPlugin(trac.core.Component):
         """
         self.publish(
             topic='ticket.update',
-            ticket=ticket.values,
+            ticket=ticket2dict(ticket),
             comment=comment,
             author=author,
             old_values=old_values,
@@ -66,7 +100,7 @@ class FedmsgPlugin(trac.core.Component):
 
     def ticket_deleted(self, ticket):
         """Called when a ticket is deleted."""
-        self.publish(topic='ticket.delete', ticket=ticket.values)
+        self.publish(topic='ticket.delete', ticket=ticket2dict(ticket))
 
     def wiki_page_added(self, page):
         """Called whenever a new Wiki page is added."""
@@ -99,26 +133,4 @@ class FedmsgPlugin(trac.core.Component):
             topic='wiki.page.rename',
             page=wikipage2dict(page),
             old_name=old_name
-        )
-
-    def changeset_added(self, repos, changeset):
-        """Called after a changeset has been added to a repository."""
-        self.publish(
-            topic='changeset.new',
-            repos=[repo.name for repo in repos],
-            changeset=changeset.get_properties(),
-        )
-
-    def changeset_modified(self, repos, changeset, old_changeset):
-        """Called after a changeset has been modified in a repository.
-
-        The `old_changeset` argument contains the metadata of the changeset
-        prior to the modification. It is `None` if the old metadata cannot
-        be retrieved.
-        """
-        self.publish(
-            topic='changeset.update',
-            repos=[repo.name for repo in repos],
-            changeset=changeset.get_properties(),
-            old_changeset=old_changeset.get_properties(),
         )
