@@ -7,11 +7,6 @@ import inspect
 import socket
 import fedmsg
 
-# If fedmsg was already initialized, let's not re-do that.
-if not getattr(getattr(fedmsg, '__local', None), '__context', None):
-    hostname = socket.gethostname().split('.', 1)[0]
-    fedmsg.init(name="trac." + hostname)
-
 
 def env2dict(env):
     """ Utility method to format the trac environment for fedmsg. """
@@ -70,6 +65,14 @@ class FedmsgPlugin(trac.core.Component):
         trac.ticket.api.ITicketChangeListener,
         trac.wiki.api.IWikiChangeListener,
     )
+
+    def __init__(self, *args, **kwargs):
+        super(FedmsgPlugin, self).__init__(*args, **kwargs)
+
+        # If fedmsg was already initialized, let's not re-do that.
+        if not getattr(getattr(fedmsg, '__local', None), '__context', None):
+            hostname = socket.gethostname().split('.', 1)[0]
+            fedmsg.init(name="trac." + hostname)
 
     def publish(self, topic, **msg):
         """ Inner workhorse method.  Publish arguments to fedmsg. """
