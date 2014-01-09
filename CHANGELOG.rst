@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.3.0
+-----
+
+- Use an active fedmsg socket instead of passive ones. `d545e75a3 <https://github.com/fedora-infra/trac-fedmsg-plugin/commit/d545e75a31729afe04ece1dcca64501aedd81aaa>`_
+- Merge pull request #2 from fedora-infra/feature/active-instead-of-passive `e5f983d43 <https://github.com/fedora-infra/trac-fedmsg-plugin/commit/e5f983d4311ad35bae4a830aaedc5709f53b86ee>`_
+- Merge branch 'develop' of github.com:fedora-infra/trac-fedmsg-plugin into develop `b94d6f8a8 <https://github.com/fedora-infra/trac-fedmsg-plugin/commit/b94d6f8a8e27b6d3538c86213bce2d1b5ed5e427>`_
+
 0.2.0
 -----
 
