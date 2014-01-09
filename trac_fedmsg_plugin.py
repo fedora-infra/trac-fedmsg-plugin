@@ -4,7 +4,6 @@ import trac.ticket.api
 import trac.wiki.api
 
 import inspect
-import socket
 import fedmsg
 
 
@@ -71,8 +70,10 @@ class FedmsgPlugin(trac.core.Component):
 
         # If fedmsg was already initialized, let's not re-do that.
         if not getattr(getattr(fedmsg, '__local', None), '__context', None):
-            hostname = socket.gethostname().split('.', 1)[0]
-            fedmsg.init(name="trac." + hostname)
+            config = fedmsg.config.load_config()
+            config['active'] = True
+            fedmsg.init(name='relay_inbound', cert_prefix='trac', **config)
+
 
     def publish(self, topic, **msg):
         """ Inner workhorse method.  Publish arguments to fedmsg. """
