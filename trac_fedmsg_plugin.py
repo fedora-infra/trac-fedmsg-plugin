@@ -71,9 +71,11 @@ class FedmsgPlugin(trac.core.Component):
         trac.wiki.api.IWikiChangeListener,
     )
 
-    remove_fields_before_publish =
-    ListOption('trac_fedmsg_plugin','do_not_send_to_fedmsg','author',',',doc="""A
-               comma separated list of fields not to be sent to fedmsg""")
+    remove_fields_before_publish = ListOption( 'trac_fedmsg_plugin',
+                                              'do_not_send_to_fedmsg', 'author',
+                                              ',', doc="""A comma separated list
+                                              of fields not to be sent to
+                                              fedmsg""")
     # Improve doc: Add a list of fields that can be mentioned here.
 
     def __init__(self, *args, **kwargs):
