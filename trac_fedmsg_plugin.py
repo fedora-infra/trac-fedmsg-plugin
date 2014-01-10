@@ -2,6 +2,7 @@ import trac.core
 
 import trac.ticket.api
 import trac.wiki.api
+from trac.config import ListOption
 
 import inspect
 import fedmsg
@@ -23,9 +24,14 @@ def wikipage2dict(page):
     return dict([(attr, getattr(page, attr)) for attr in attrs])
 
 
-def ticket2dict(ticket):
+def ticket2dict(ticket, remove_fields_before_publish):
     d = dict(id=ticket.id)
     d.update(ticket.values)
+
+    for field in remove_fields_before_publish:
+        if field in d:
+            del d[field]
+
     return d
 
 
@@ -65,6 +71,11 @@ class FedmsgPlugin(trac.core.Component):
         trac.wiki.api.IWikiChangeListener,
     )
 
+    remove_fields_before_publish =
+    ListOption('trac_fedmsg_plugin','do_not_send_to_fedmsg','author',',',doc="""A
+               comma separated list of fields not to be sent to fedmsg""")
+    # Improve doc: Add a list of fields that can be mentioned here.
+
     def __init__(self, *args, **kwargs):
         super(FedmsgPlugin, self).__init__(*args, **kwargs)
 
@@ -83,7 +94,8 @@ class FedmsgPlugin(trac.core.Component):
 
     def ticket_created(self, ticket):
         """Called when a ticket is created."""
-        self.publish(topic='ticket.new', ticket=ticket2dict(ticket))
+        self.publish(topic='ticket.new', ticket=ticket2dict(ticket,
+                                                            remove_fields_before_publish))
 
     def ticket_changed(self, ticket, comment, author, old_values):
         """Called when a ticket is modified.
@@ -91,9 +103,15 @@ class FedmsgPlugin(trac.core.Component):
         `old_values` is a dictionary containing the previous values of the
         fields that have changed.
         """
+
+        for field in remove_fields_before_publish:
+            if field in old_values:
+                del old_values[field]
+
+        # Should we check these too?
         self.publish(
             topic='ticket.update',
-            ticket=ticket2dict(ticket),
+            ticket=ticket2dict(ticket, remove_fields_before_publish),
             comment=comment,
             author=author,
             old_values=old_values,
@@ -101,7 +119,8 @@ class FedmsgPlugin(trac.core.Component):
 
     def ticket_deleted(self, ticket):
         """Called when a ticket is deleted."""
-        self.publish(topic='ticket.delete', ticket=ticket2dict(ticket))
+        self.publish(topic='ticket.delete', ticket=ticket2dict(ticket,
+                                                               remove_fields_before_publish))
 
     def wiki_page_added(self, page):
         """Called whenever a new Wiki page is added."""
