@@ -1,6 +1,16 @@
 Changelog
 =========
 
+0.4.0
+-----
+
+- Attempt #1 and enhancing the plugin `526d77aab <https://github.com/fedora-infra/trac-fedmsg-plugin/commit/526d77aab3adf5861f4fb53a2de1fcec3eeae8ed>`_
+- Correct line split and indentation `4f4c1ca81 <https://github.com/fedora-infra/trac-fedmsg-plugin/commit/4f4c1ca81b470948743ebcb7f29450c536f9287b>`_
+- Improve doc string for configuration option `6de28fe34 <https://github.com/fedora-infra/trac-fedmsg-plugin/commit/6de28fe347abb8b9caaec9d4d1397e60a49e87bf>`_
+- Merge pull request #4 from sanjayankur31/hide_fields `931af047a <https://github.com/fedora-infra/trac-fedmsg-plugin/commit/931af047a28e6ab0a814f8a0894d701bbfd1f058>`_
+- pep8 `5a3a93789 <https://github.com/fedora-infra/trac-fedmsg-plugin/commit/5a3a9378957b0abd9dc061f877f85f2891e61032>`_
+- Use slightly more terse names. `105c38dcf <https://github.com/fedora-infra/trac-fedmsg-plugin/commit/105c38dcf1dfa991c165c9b681e3f59603f43033>`_
+
 0.3.0
 -----
 
