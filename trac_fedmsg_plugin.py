@@ -74,9 +74,12 @@ class FedmsgPlugin(trac.core.Component):
     # Improve doc: Add a list of fields that can be mentioned here to help the
     # user.
     option_doc = "A comma separated list of fields not to be sent to fedmsg"
-    remove_fields_before_publish = ListOption( 'trac_fedmsg_plugin',
-                                              'do_not_send_to_fedmsg', 'author',
-                                              ',', doc=option_doc)
+    remove_fields_before_publish = ListOption(
+        'trac_fedmsg_plugin',
+        'do_not_send_to_fedmsg',
+        'author',
+        ',',
+        doc=option_doc)
 
     def __init__(self, *args, **kwargs):
         super(FedmsgPlugin, self).__init__(*args, **kwargs)
@@ -87,7 +90,6 @@ class FedmsgPlugin(trac.core.Component):
             config['active'] = True
             fedmsg.init(name='relay_inbound', cert_prefix='trac', **config)
 
-
     def publish(self, topic, **msg):
         """ Inner workhorse method.  Publish arguments to fedmsg. """
         msg['instance'] = env2dict(self.env)
@@ -96,8 +98,8 @@ class FedmsgPlugin(trac.core.Component):
 
     def ticket_created(self, ticket):
         """Called when a ticket is created."""
-        self.publish(topic='ticket.new', ticket=ticket2dict(ticket,
-                                                            remove_fields_before_publish))
+        self.publish(topic='ticket.new', ticket=ticket2dict(
+            ticket, remove_fields_before_publish))
 
     def ticket_changed(self, ticket, comment, author, old_values):
         """Called when a ticket is modified.
@@ -121,8 +123,8 @@ class FedmsgPlugin(trac.core.Component):
 
     def ticket_deleted(self, ticket):
         """Called when a ticket is deleted."""
-        self.publish(topic='ticket.delete', ticket=ticket2dict(ticket,
-                                                               remove_fields_before_publish))
+        self.publish(topic='ticket.delete', ticket=ticket2dict(
+            ticket, remove_fields_before_publish))
 
     def wiki_page_added(self, page):
         """Called whenever a new Wiki page is added."""
