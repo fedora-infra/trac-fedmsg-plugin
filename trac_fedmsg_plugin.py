@@ -74,11 +74,11 @@ class FedmsgPlugin(trac.core.Component):
     # Improve doc: Add a list of fields that can be mentioned here to help the
     # user.
     option_doc = "A comma separated list of fields not to be sent to fedmsg"
-    remove_fields_before_publish = ListOption(
-        'trac_fedmsg_plugin',
-        'do_not_send_to_fedmsg',
-        'author',
-        ',',
+    banned_fields = ListOption(
+        section='fedmsg',
+        name='banned_fields',
+        default=None,
+        sep=',',
         doc=option_doc)
 
     def __init__(self, *args, **kwargs):
@@ -99,7 +99,7 @@ class FedmsgPlugin(trac.core.Component):
     def ticket_created(self, ticket):
         """Called when a ticket is created."""
         self.publish(topic='ticket.new', ticket=ticket2dict(
-            ticket, remove_fields_before_publish))
+            ticket, self.banned_fields))
 
     def ticket_changed(self, ticket, comment, author, old_values):
         """Called when a ticket is modified.
@@ -108,14 +108,14 @@ class FedmsgPlugin(trac.core.Component):
         fields that have changed.
         """
 
-        for field in remove_fields_before_publish:
+        for field in self.banned_fields:
             if field in old_values:
                 del old_values[field]
 
         # Should we check these too?
         self.publish(
             topic='ticket.update',
-            ticket=ticket2dict(ticket, remove_fields_before_publish),
+            ticket=ticket2dict(ticket, self.banned_fields),
             comment=comment,
             author=author,
             old_values=old_values,
@@ -124,7 +124,7 @@ class FedmsgPlugin(trac.core.Component):
     def ticket_deleted(self, ticket):
         """Called when a ticket is deleted."""
         self.publish(topic='ticket.delete', ticket=ticket2dict(
-            ticket, remove_fields_before_publish))
+            ticket, self.banned_fields))
 
     def wiki_page_added(self, page):
         """Called whenever a new Wiki page is added."""
