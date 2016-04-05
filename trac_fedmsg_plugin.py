@@ -56,8 +56,8 @@ def currently_logged_in_user():
         if 'req' in frame.f_locals:
             return frame.f_locals['req'].authname
 
-    # Practically speaking, we should never get here.
-    raise KeyError('No request object found.')
+    # This code is reached if there's no Request. Most common case is trac-admin
+    return 'admin'
 
 
 class FedmsgPlugin(trac.core.Component):
