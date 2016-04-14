@@ -35,8 +35,8 @@ def ticket2dict(ticket, remove_fields_before_publish):
     return d
 
 
-def currently_logged_in_user():
-    """ Return the currently logged in user.
+def get_request_object();
+    """ Return the current request object
 
     This is insane.
 
@@ -54,7 +54,17 @@ def currently_logged_in_user():
 
     for frame in (f[0] for f in inspect.stack()):
         if 'req' in frame.f_locals:
-            return frame.f_locals['req'].authname
+            return frame.f_locals['req']
+
+    # This code is reached if there's no Request. Most common case is trac-admin
+    return None
+
+
+def currently_logged_in_user():
+    """ Return the currently logged in user."""
+    current_request = get_request_object()
+    if current_request:
+        return current_request.authname
 
     # This code is reached if there's no Request. Most common case is trac-admin
     return 'admin'
