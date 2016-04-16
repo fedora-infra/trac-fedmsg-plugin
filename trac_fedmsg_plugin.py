@@ -41,7 +41,7 @@ def attachment2dict(attachment):
     return dict([(attr, getattr(attachment, attr)) for attr in attrs])
 
 
-def get_request_object();
+def get_request_object():
     """ Return the current request object
     This is insane.
 
