@@ -35,9 +35,14 @@ def ticket2dict(ticket, remove_fields_before_publish):
     return d
 
 
+def attachment2dict(attachment):
+    attrs = ['parent_realm', 'parent_id', 'filename', 'description', 'size',
+             'date', 'author']
+    return dict([(attr, getattr(attachment, attr)) for attr in attrs])
+
+
 def get_request_object();
     """ Return the current request object
-
     This is insane.
 
     Unless your method or function is passed a reference to the trac
@@ -79,6 +84,7 @@ class FedmsgPlugin(trac.core.Component):
     trac.core.implements(
         trac.ticket.api.ITicketChangeListener,
         trac.wiki.api.IWikiChangeListener,
+        trac.wiki.api.IAttachmentChangeListener,
     )
 
     # Improve doc: Add a list of fields that can be mentioned here to help the
@@ -105,6 +111,20 @@ class FedmsgPlugin(trac.core.Component):
         msg['instance'] = env2dict(self.env)
         msg['agent'] = currently_logged_in_user()
         fedmsg.publish(modname='trac', topic=topic, msg=msg)
+
+    def attachment_added(self, attachment):
+        self.publish(topic='attachment.added',
+                     attachment=attachment2dict(attachment))
+
+    def attachment_deleted(self, attachment):
+        self.publish(topic='attachment.deleted',
+                     attachment=attachment2dict(attachment))
+
+    def attachment_reparented(self, attachment, old_parent_realm, old_parent_id):
+        self.publish(topic='attachment.reparented',
+                     attachment=attachment2dict(attachment),
+                     old_parent_realm=old_parent_realm,
+                     old_parent_id=old_parent_id)
 
     def ticket_created(self, ticket):
         """Called when a ticket is created."""
